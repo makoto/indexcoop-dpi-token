@@ -1,11 +1,12 @@
 import {
-  Contract, Approval,
-} from "../generated/Contract/Contract"
+  SetToken, Approval,
+} from "../generated/SetToken/SetToken"
 import { IndexEntity } from "../generated/schema"
 import { log } from '@graphprotocol/graph-ts'
 
+
 export function handleApproval(event: Approval): void {
-  let contract = Contract.bind(event.address)
+  let contract = SetToken.bind(event.address)
   log.warning(
     '*** 1 Block number: {}, block hash: {}, transaction hash: {}',
     [
