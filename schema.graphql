@@ -1,6 +1,6 @@
-type ExampleEntity @entity {
+type IndexEntity @entity {
   id: ID!
-  count: BigInt!
-  owner: Bytes! # address
-  spender: Bytes! # address
+  component:Bytes!
+  unit: BigInt!
+  timestamp: BigInt!
 }
