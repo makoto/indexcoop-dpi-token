@@ -1,0 +1,68 @@
+specVersion: 0.0.1
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Contract
+    network: mainnet
+    source:
+      address: "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b"
+      abi: Contract
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.2
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - ComponentAdded
+        - ComponentRemoved
+        - DefaultPositionUnitEdited
+        - ExternalPositionDataEdited
+        - ExternalPositionUnitEdited
+        - Invoked
+        - ManagerEdited
+        - ModuleAdded
+        - ModuleInitialized
+        - ModuleRemoved
+        - PendingModuleRemoved
+        - PositionModuleAdded
+        - PositionModuleRemoved
+        - PositionMultiplierEdited
+        - Transfer
+      abis:
+        - name: Contract
+          file: ./abis/Contract.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: ComponentAdded(indexed address)
+          handler: handleComponentAdded
+        - event: ComponentRemoved(indexed address)
+          handler: handleComponentRemoved
+        - event: DefaultPositionUnitEdited(indexed address,int256)
+          handler: handleDefaultPositionUnitEdited
+        - event: ExternalPositionDataEdited(indexed address,indexed address,bytes)
+          handler: handleExternalPositionDataEdited
+        - event: ExternalPositionUnitEdited(indexed address,indexed address,int256)
+          handler: handleExternalPositionUnitEdited
+        - event: Invoked(indexed address,indexed uint256,bytes,bytes)
+          handler: handleInvoked
+        - event: ManagerEdited(address,address)
+          handler: handleManagerEdited
+        - event: ModuleAdded(indexed address)
+          handler: handleModuleAdded
+        - event: ModuleInitialized(indexed address)
+          handler: handleModuleInitialized
+        - event: ModuleRemoved(indexed address)
+          handler: handleModuleRemoved
+        - event: PendingModuleRemoved(indexed address)
+          handler: handlePendingModuleRemoved
+        - event: PositionModuleAdded(indexed address,indexed address)
+          handler: handlePositionModuleAdded
+        - event: PositionModuleRemoved(indexed address,indexed address)
+          handler: handlePositionModuleRemoved
+        - event: PositionMultiplierEdited(int256)
+          handler: handlePositionMultiplierEdited
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
