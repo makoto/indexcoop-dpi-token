@@ -10,9 +10,10 @@ type IndexEntity @entity {
   timestamp: BigInt!
 }
 
-type TimeSeries @entity {
+type IndexHistory @entity {
   id: ID!
   timestamp: BigInt!
   dpiValue: BigDecimal!
   tokenSumValue: BigDecimal!
+  pctDiff: BigDecimal!
 }

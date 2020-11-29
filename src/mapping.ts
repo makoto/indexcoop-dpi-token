@@ -4,18 +4,11 @@ import {
 import { Pair, Pair__getReservesResult } from "../generated/SetToken/Pair"
 import { Factory } from "../generated/SetToken/Factory"
 import { Token } from "../generated/SetToken/Token"
-import { IndexEntity, TimeSeries } from "../generated/schema"
+import { IndexEntity, IndexHistory } from "../generated/schema"
 import { Address, Bytes, BigInt, BigDecimal, log } from '@graphprotocol/graph-ts'
 const ZERO = BigInt.fromI32(0).toBigDecimal()
 export function handleApproval(event: Approval): void {
-  log.warning(
-    '*** 1 Block number: {}, block hash: {}, transaction hash: {}',
-    [
-      event.block.number.toString(),
-      event.block.hash.toHexString(),
-      event.transaction.hash.toHexString()
-    ]
-  );
+
   let setTokenContract = SetToken.bind(event.address)
   let positions = setTokenContract.getPositions()
   let tokenSumValue = ZERO
@@ -25,18 +18,7 @@ export function handleApproval(event: Approval): void {
     entity.component = positon.component
     entity.unit = positon.unit
     entity.timestamp = event.block.timestamp
-
-    log.warning(
-      '*** 2 i: {}, component: {}, unit: {}',
-      [
-        i.toString(),
-        entity.component.toHexString(),
-        entity.unit.toHexString()
-      ]
-    );
-
     let prices = findTokenPrice(entity.component)
-    
 
     // Disabled for now
     let tokenContract = Token.bind(Address.fromString(entity.component.toHexString()))
@@ -48,34 +30,43 @@ export function handleApproval(event: Approval): void {
       entity.symbol = tokenContract.symbol()
       entity.decimals = BigInt.fromI32(tokenContract.decimals())
     }
-    // Disabled for now as it throws up the error
     // ERROR AS200: Conversion from type '~lib/@graphprotocol/graph-ts/index/BigInt' to 'u8' requires an explicit cast.
     // let precision = BigInt.fromI32(10).pow(entity.decimals).toBigDecimal()
-    let precision = BigInt.fromI32(10).pow(18).toBigDecimal()
+    // ERROR on Reindex: Failed to invoke handler 'handleApproval': out of range integral type conversion attempted wasm backtrace: 0: 0x1ecb - <unknown>!<wasm function 95>
+    // let precision = BigInt.fromI32(10).pow(<u8>entity.decimals).toBigDecimal()
+    // ERROR AS200: Conversion from type 'i32' to 'u8' requires an explicit cast
+    // let precision = BigInt.fromI32(10).pow(entity.decimals.toI32()).toBigDecimal()
+    let precision = BigInt.fromI32(10).pow(<u8>(entity.decimals.toI32())).toBigDecimal()
     entity.tokenPrice = prices.tokenPrice
     entity.ethPrice = prices.ethPrice
     entity.tokenBalance = entity.tokenPrice.times(entity.unit.toBigDecimal()).div(precision)
     entity.save()
-    log.warning(
-      '*** 3 tokenPrice: {}, ethPrice: {}, tokenBalance: {}',
-      [
-        entity.tokenPrice.toString(),
-        entity.ethPrice.toString(),
-        entity.tokenBalance.toString()
-      ]
-    );
     tokenSumValue = tokenSumValue.plus(entity.tokenBalance)
   }
-  let timeSeries = new TimeSeries(event.transaction.hash.toHex())
+  let timeSeries = new IndexHistory(event.transaction.hash.toHex())
   timeSeries.timestamp = event.block.timestamp
   timeSeries.tokenSumValue = tokenSumValue
   timeSeries.dpiValue = findTokenPrice(event.address).tokenPrice
+
+  let diff:BigDecimal
+  let two = BigInt.fromI32(2).toBigDecimal()
+  let hundred = BigInt.fromI32(100).toBigDecimal()
+  if(timeSeries.dpiValue.gt(tokenSumValue)){
+    diff = timeSeries.dpiValue.minus(timeSeries.tokenSumValue)
+  }else{
+    diff = timeSeries.tokenSumValue.minus(timeSeries.dpiValue)
+  }
+  let sum = timeSeries.dpiValue.plus(timeSeries.tokenSumValue)
+  timeSeries.pctDiff = diff.div(sum).div(two).times(hundred)
   timeSeries.save()
+
   log.warning(
-    '*** 4 tokenSumValue: {}, dpiValue: {}',
+    '*** 4 block {} , tokenSumValue: {}, dpiValue: {} pctDiff: {}',
     [
+      event.block.number.toString(),
       timeSeries.tokenSumValue.toString(),
-      timeSeries.dpiValue.toString()
+      timeSeries.dpiValue.toString(),
+      timeSeries.pctDiff.toString(),
     ]
   );
 }
