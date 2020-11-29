@@ -1,6 +1,18 @@
 type IndexEntity @entity {
   id: ID!
   component:Bytes!
+  decimals:BigInt!
+  symbol:String!
   unit: BigInt!
+  tokenPrice: BigDecimal!
+  ethPrice: BigDecimal!
+  tokenBalance: BigDecimal!
   timestamp: BigInt!
+}
+
+type TimeSeries @entity {
+  id: ID!
+  timestamp: BigInt!
+  dpiValue: BigDecimal!
+  tokenSumValue: BigDecimal!
 }

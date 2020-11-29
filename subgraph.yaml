@@ -33,6 +33,12 @@ dataSources:
       abis:
         - name: SetToken
           file: ./abis/SetToken.json
+        - name: Pair
+          file: ./abis/Pair.json
+        - name: Factory
+          file: ./abis/Factory.json
+        - name: Token
+          file: ./abis/Token.json
       eventHandlers:
         - event: Approval(indexed address,indexed address,uint256)
           handler: handleApproval
