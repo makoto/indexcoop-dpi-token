@@ -12,6 +12,7 @@ export function handleApproval(event: Approval): void {
   let setTokenContract = SetToken.bind(event.address)
   let positions = setTokenContract.getPositions()
   let tokenSumValue = ZERO
+  let historyId = event.transaction.hash.toHex()
   for (let i = 0, l = positions.length; i < l; ++i) {
     let positon = positions[i]
     let entity = new IndexEntity(event.transaction.hash.toHex() + "-" + i.toString())
@@ -36,14 +37,16 @@ export function handleApproval(event: Approval): void {
     // let precision = BigInt.fromI32(10).pow(<u8>entity.decimals).toBigDecimal()
     // ERROR AS200: Conversion from type 'i32' to 'u8' requires an explicit cast
     // let precision = BigInt.fromI32(10).pow(entity.decimals.toI32()).toBigDecimal()
+    // Correct!
     let precision = BigInt.fromI32(10).pow(<u8>(entity.decimals.toI32())).toBigDecimal()
     entity.tokenPrice = prices.tokenPrice
     entity.ethPrice = prices.ethPrice
     entity.tokenBalance = entity.tokenPrice.times(entity.unit.toBigDecimal()).div(precision)
+    entity.history = historyId
     entity.save()
     tokenSumValue = tokenSumValue.plus(entity.tokenBalance)
   }
-  let timeSeries = new IndexHistory(event.transaction.hash.toHex())
+  let timeSeries = new IndexHistory(historyId)
   timeSeries.timestamp = event.block.timestamp
   timeSeries.tokenSumValue = tokenSumValue
   timeSeries.dpiValue = findTokenPrice(event.address).tokenPrice
@@ -90,7 +93,12 @@ export function findTokenPrice(tokenAddress: Bytes): PriceSet {
   let tryReserves = pairContract.try_getReserves()
   let reserves: Pair__getReservesResult
   if(tryReserves.reverted){
-    log.warning('****00091 pairAddress.getReserves failed {}', [pairAddress.toHexString()])
+    log.warning(
+      '****00091 pairAddress.getReserves failed pairAddress {}, tokenAddress {}',
+      [
+        pairAddress.toHexString(),
+        tokenAddress.toHexString()
+      ])
     return new PriceSet(ZERO, ZERO)
   }else{
     reserves = tryReserves.value

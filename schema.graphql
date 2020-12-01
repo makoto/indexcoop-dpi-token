@@ -8,6 +8,7 @@ type IndexEntity @entity {
   ethPrice: BigDecimal!
   tokenBalance: BigDecimal!
   timestamp: BigInt!
+  history: IndexHistory
 }
 
 type IndexHistory @entity {
@@ -16,4 +17,5 @@ type IndexHistory @entity {
   dpiValue: BigDecimal!
   tokenSumValue: BigDecimal!
   pctDiff: BigDecimal!
+  entities:[IndexEntity!]! @derivedFrom(field: "history")
 }
